@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  cars         Car[]
+  analyses     Analysis[]
+  createdAt    DateTime @default(now())
+}
+
+model Car {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  plate       String
+  brandModel  String
+  km          Int
+  analyses    Analysis[]
+  createdAt   DateTime @default(now())
+}
+
+enum AnalysisType {
+  INSTANT
+  PREDICT
+}
+
+model Analysis {
+  id               String        @id @default(uuid())
+  user             User          @relation(fields: [userId], references: [id])
+  userId           String
+  car              Car           @relation(fields: [carId], references: [id])
+  carId            String
+  type             AnalysisType
+  audioUrl         String?       // optional for predict
+  healthScore      Int?          // 0-100 (for instant)
+  riskPercentage   Float?        // 0-1 (for predict)
+  riskLevel        String
+  possibleFaults   Json?         // array of {name, probability}
+  estimatedCostMin Int?
+  estimatedCostMax Int?
+  predictedIssues  Json?         // array for predict
+  recommendation   String?
+  createdAt        DateTime      @default(now())
+}
